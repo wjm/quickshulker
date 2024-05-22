@@ -1,93 +1,175 @@
-//package net.kyrptonaught.quickshulker.network;
-//
-//import io.netty.buffer.Unpooled;
-//import net.fabricmc.api.EnvType;
-//import net.fabricmc.api.Environment;
-//import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-//import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-//import net.kyrptonaught.quickshulker.BundleHelper;
-//import net.kyrptonaught.quickshulker.QuickShulkerMod;
-//import net.minecraft.client.MinecraftClient;
-//import net.minecraft.item.ItemStack;
-//import net.minecraft.network.PacketByteBuf;
-//import net.minecraft.network.packet.CustomPayload;
-//import net.minecraft.screen.slot.Slot;
-//import net.minecraft.util.Identifier;
-//
-//public class QuickBundlePacket implements CustomPayload {
-//    private static final Identifier QUICK_BUNDLE_PACKET = new Identifier(QuickShulkerMod.MOD_ID, "quick_bundle_packet");
-//    private static final Identifier QUICK_BUNDLEHELD_PACKET = new Identifier(QuickShulkerMod.MOD_ID, "quick_bundleheld_packet");
-//    private static final Identifier QUICK_UNBUNDLE_PACKET = new Identifier(QuickShulkerMod.MOD_ID, "quick_unbundle_packet");
-//
-//    public static void registerReceivePacket() {
-//        ServerPlayNetworking.registerGlobalReceiver(QUICK_BUNDLE_PACKET, (payload,context) -> {
-//            if (payload)
-//            if (context.player().isCreative()) {
-//                context.player().server.execute(() -> BundleHelper.bundleItemIntoStack(context.player(), context.player().getInventory().getStack(playerInvSlotID), stackToBundle, null));
-//            }
-//        });
-//        Unbundle.registerReceivePacket();
-//        BundleIntoHeld.registerReceivePacket();
-//    }
-//
-//    @Environment(EnvType.CLIENT)
-//    public static void sendPacket(int slotID, ItemStack stackToBundle) {
-//        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-//        buf.writeInt(slotID);
-//        buf.writeItemStack(stackToBundle);
-//        ClientPlayNetworking.send(QUICK_BUNDLE_PACKET, new PacketByteBuf(buf));
-//    }
-//
-//    public static void sendCreativeSlotUpdate(ItemStack output, Slot slot) {
-//        MinecraftClient.getInstance().interactionManager.clickCreativeStack(output, slot.id);
-//    }
-//
-//    @Override
-//    public Id<? extends CustomPayload> getId() {
-//        return null;
-//    }
-//
-//    public static class BundleIntoHeld {
-//        public static void registerReceivePacket() {
-//            ServerPlayNetworking.registerGlobalReceiver(QUICK_BUNDLEHELD_PACKET, (server, player, serverPlayNetworkHandler, packetByteBuf, packetSender) -> {
-//                if (player.isCreative()) {
-//                    ItemStack stackToBundle = packetByteBuf.readItemStack();
-//                    ItemStack bundleStack = packetByteBuf.readItemStack();
-//                    server.execute(() -> BundleHelper.bundleItemIntoStack(player, bundleStack, stackToBundle, null));
-//                }
-//            });
-//        }
-//
-//        @Environment(EnvType.CLIENT)
-//        public static void sendPacket(ItemStack stackToBundle, ItemStack bundleStack) {
-//            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-//            buf.writeItemStack(stackToBundle);
-//            buf.writeItemStack(bundleStack);
-//            ClientPlayNetworking.send(QUICK_BUNDLEHELD_PACKET, new PacketByteBuf(buf));
-//        }
-//    }
-//
-//    public static class Unbundle {
-//        public static void registerReceivePacket() {
-//            ServerPlayNetworking.registerGlobalReceiver(QUICK_UNBUNDLE_PACKET, (server, player, serverPlayNetworkHandler, packetByteBuf, packetSender) -> {
-//                if (player.isCreative()) {
-//                    int playerInvSlotID = packetByteBuf.readInt();
-//                    ItemStack unbundleStack = packetByteBuf.readItemStack();
-//                    server.execute(() -> {
-//                        ItemStack output = BundleHelper.unbundleItem(player, unbundleStack);
-//                        if (output != null)
-//                            player.getInventory().setStack(playerInvSlotID, output);
-//                    });
-//                }
-//            });
-//        }
-//
-//        @Environment(EnvType.CLIENT)
-//        public static void sendPacket(int slotID, ItemStack unbundleStack) {
-//            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-//            buf.writeInt(slotID);
-//            buf.writeItemStack(unbundleStack);
-//            ClientPlayNetworking.send(QUICK_UNBUNDLE_PACKET, new PacketByteBuf(buf));
-//        }
-//    }
-//}
+package net.kyrptonaught.quickshulker.network;
+
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.kyrptonaught.quickshulker.BundleHelper;
+import net.kyrptonaught.quickshulker.QuickShulkerMod;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.component.ComponentChanges;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.screen.slot.Slot;
+
+import java.util.List;
+
+public record QuickBundlePacket(ItemStackWithPos itemStackWithPos) implements CustomPayload {
+
+    public static final Id<QuickBundlePacket> ID = CustomPayload.id(QuickShulkerMod.MOD_ID + ":" + "quick_bundle_packet");
+    public static final PacketCodec<RegistryByteBuf, QuickBundlePacket> CODEC = new PacketCodec<>() {
+        private static final PacketCodec<RegistryByteBuf, RegistryEntry<Item>> ITEM_PACKET_CODEC = PacketCodecs.registryEntry(RegistryKeys.ITEM);
+
+        @Override
+        public QuickBundlePacket decode(RegistryByteBuf registryByteBuf) {
+            int slotId = registryByteBuf.readInt();
+            int i = registryByteBuf.readVarInt();
+            ItemStack itemStack1 = ItemStack.EMPTY;
+            RegistryEntry<Item> registryEntry = ITEM_PACKET_CODEC.decode(registryByteBuf);
+            ComponentChanges componentChanges = ComponentChanges.PACKET_CODEC.decode(registryByteBuf);
+            itemStack1 = new ItemStack(registryEntry, i, componentChanges);
+            return new QuickBundlePacket(new ItemStackWithPos(slotId, itemStack1));
+        }
+
+        @Override
+        public void encode(RegistryByteBuf registryByteBuf, QuickBundlePacket quickBundlePacket) {
+            registryByteBuf.writeInt(quickBundlePacket.itemStackWithPos.slotId);
+            ItemStack itemStack = quickBundlePacket.itemStackWithPos.itemStack;
+            if (itemStack.isEmpty()) {
+                registryByteBuf.writeVarInt(0);
+                return;
+            }
+            registryByteBuf.writeVarInt(itemStack.getCount());
+            ITEM_PACKET_CODEC.encode(registryByteBuf, itemStack.getRegistryEntry());
+            ComponentChanges.PACKET_CODEC.encode(registryByteBuf, itemStack.getComponentChanges());
+        }
+    };
+
+    public static void registerReceivePacket() {
+        PayloadTypeRegistry.playS2C().register(QuickBundlePacket.ID, QuickBundlePacket.CODEC);
+        PayloadTypeRegistry.playC2S().register(QuickBundlePacket.ID, QuickBundlePacket.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(QuickBundlePacket.ID, (payload, context) -> {
+            if (context.player().isCreative()) {
+                context.player().server.execute(() -> BundleHelper.bundleItemIntoStack(context.player(), context.player().getInventory().getStack(payload.itemStackWithPos.slotId), payload.itemStackWithPos.itemStack, null));
+            }
+        });
+        UnBundlePacket.registerReceivePacket();
+        BundleIntoHeld.registerReceivePacket();
+    }
+
+    @Environment(EnvType.CLIENT)
+    public static void sendPacket(int slotID, ItemStack stackToBundle) {
+        ClientPlayNetworking.send(new QuickBundlePacket(new ItemStackWithPos(slotID, stackToBundle)));
+    }
+
+    public static void sendCreativeSlotUpdate(ItemStack output, Slot slot) {
+        MinecraftClient.getInstance().interactionManager.clickCreativeStack(output, slot.id);
+    }
+
+    @Override
+    public Id<? extends CustomPayload> getId() {
+        return QuickBundlePacket.ID;
+    }
+
+    public static class ItemStackWithPos {
+        private ItemStack itemStack;
+        private int slotId;
+
+        public ItemStackWithPos(int slotId, ItemStack itemStack) {
+            this.itemStack = itemStack;
+            this.slotId = slotId;
+        }
+    }
+
+
+    public record BundleIntoHeld(List<ItemStack> stackList) implements CustomPayload {
+
+        public static final Id<BundleIntoHeld> ID = CustomPayload.id(QuickShulkerMod.MOD_ID + ":" + "quick_bundleheld_packet");
+
+        public static final PacketCodec<RegistryByteBuf, BundleIntoHeld> CODEC = PacketCodec.tuple(ItemStack.LIST_PACKET_CODEC, BundleIntoHeld::stackList, BundleIntoHeld::new);
+
+        public static void registerReceivePacket() {
+            PayloadTypeRegistry.playS2C().register(BundleIntoHeld.ID, BundleIntoHeld.CODEC);
+            PayloadTypeRegistry.playC2S().register(BundleIntoHeld.ID, BundleIntoHeld.CODEC);
+            ServerPlayNetworking.registerGlobalReceiver(BundleIntoHeld.ID, (payload, context) -> {
+                if (context.player().isCreative()) {
+                    context.player().server.execute(() -> BundleHelper.bundleItemIntoStack(context.player(), payload.stackList.get(0), payload.stackList.get(1), null));
+                }
+            });
+        }
+
+        @Environment(EnvType.CLIENT)
+        public static void sendPacket(ItemStack stackToBundle, ItemStack bundleStack) {
+            ClientPlayNetworking.send(new BundleIntoHeld(List.of(stackToBundle, bundleStack)));
+        }
+
+        @Override
+        public Id<? extends CustomPayload> getId() {
+            return BundleIntoHeld.ID;
+        }
+    }
+
+    public record UnBundlePacket(ItemStackWithPos itemStackWithPos) implements CustomPayload {
+        public static final Id<UnBundlePacket> ID = CustomPayload.id(QuickShulkerMod.MOD_ID + ":" + "quick_unbundle_packet");
+        public static final PacketCodec<RegistryByteBuf, UnBundlePacket> CODEC = new PacketCodec<>() {
+            private static final PacketCodec<RegistryByteBuf, RegistryEntry<Item>> ITEM_PACKET_CODEC = PacketCodecs.registryEntry(RegistryKeys.ITEM);
+
+            @Override
+            public UnBundlePacket decode(RegistryByteBuf registryByteBuf) {
+                int slotId = registryByteBuf.readInt();
+                int i = registryByteBuf.readVarInt();
+                ItemStack itemStack1 = ItemStack.EMPTY;
+                RegistryEntry<Item> registryEntry = ITEM_PACKET_CODEC.decode(registryByteBuf);
+                ComponentChanges componentChanges = ComponentChanges.PACKET_CODEC.decode(registryByteBuf);
+                itemStack1 = new ItemStack(registryEntry, i, componentChanges);
+                return new UnBundlePacket(new ItemStackWithPos(slotId, itemStack1));
+            }
+
+            @Override
+            public void encode(RegistryByteBuf registryByteBuf, UnBundlePacket unBundlePacket) {
+                registryByteBuf.writeInt(unBundlePacket.itemStackWithPos.slotId);
+                ItemStack itemStack = unBundlePacket.itemStackWithPos.itemStack;
+                if (itemStack.isEmpty()) {
+                    registryByteBuf.writeVarInt(0);
+                    return;
+                }
+                registryByteBuf.writeVarInt(itemStack.getCount());
+                ITEM_PACKET_CODEC.encode(registryByteBuf, itemStack.getRegistryEntry());
+                ComponentChanges.PACKET_CODEC.encode(registryByteBuf, itemStack.getComponentChanges());
+            }
+        };
+
+        public static void registerReceivePacket() {
+            PayloadTypeRegistry.playS2C().register(UnBundlePacket.ID, UnBundlePacket.CODEC);
+            PayloadTypeRegistry.playC2S().register(UnBundlePacket.ID, UnBundlePacket.CODEC);
+            ServerPlayNetworking.registerGlobalReceiver(UnBundlePacket.ID, (payload, context) -> {
+                if (context.player().isCreative()) {
+                    int playerInvSlotID = payload.itemStackWithPos.slotId;
+                    ItemStack unBundleStack = payload.itemStackWithPos.itemStack;
+                    context.player().server.execute(() -> {
+                        ItemStack output = BundleHelper.unbundleItem(context.player(), unBundleStack);
+                        if (output != null)
+                            context.player().getInventory().setStack(playerInvSlotID, output);
+                    });
+                }
+            });
+        }
+
+        @Environment(EnvType.CLIENT)
+        public static void sendPacket(int slotID, ItemStack unBundleStack) {
+            ClientPlayNetworking.send(new UnBundlePacket(new ItemStackWithPos(slotID, unBundleStack)));
+        }
+
+        @Override
+        public Id<? extends CustomPayload> getId() {
+            return UnBundlePacket.ID;
+        }
+    }
+}

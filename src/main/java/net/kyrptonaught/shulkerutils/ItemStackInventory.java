@@ -6,7 +6,6 @@ import net.minecraft.component.type.ContainerComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.collection.DefaultedList;
 
 
@@ -21,13 +20,7 @@ public class ItemStackInventory extends SimpleInventory {
     }
 
     public static DefaultedList<ItemStack> getStacks(ItemStack usedStack, int SIZE) {
-        //  usedStack.getComponents().get(DataComponentTypes.CONTAINER).stream().forEach((System.out::println));
-        //   NbtComponent compoundTag = usedStack.getComponents().get(DataComponentTypes.BLOCK_ENTITY_DATA);
         DefaultedList<ItemStack> itemStacks = DefaultedList.ofSize(SIZE, ItemStack.EMPTY);
-        //    if (compoundTag != null && compoundTag.contains("Items")) {
-        //       Inventories.readNbt(compoundTag.copyNbt(), itemStacks,null);
-        //    }
-        //System.out.println(SIZE);
         usedStack.getComponents().get(DataComponentTypes.CONTAINER).copyTo(itemStacks);
         return itemStacks;
     }
@@ -35,24 +28,13 @@ public class ItemStackInventory extends SimpleInventory {
     @Override
     public void markDirty() {
         super.markDirty();
-        try {
-            DefaultedList<ItemStack> itemStacks = DefaultedList.ofSize(SIZE, ItemStack.EMPTY);
-            for (int i = 0; i < size(); i++) {
-                itemStacks.set(i, getStack(i));
-            }
-            itemStack.set(DataComponentTypes.CONTAINER, ContainerComponent.fromStacks(itemStacks));
-            //  if (shouldDeleteNBT(blockEntityTag)) {
-            //        itemStack.remove(DataComponentTypes.BLOCK_ENTITY_DATA);
-//            itemStack.removeSubNbt("BlockEntityTag");}
-        } catch (Exception ignored) {
+        DefaultedList<ItemStack> itemStacks = DefaultedList.ofSize(SIZE, ItemStack.EMPTY);
+        for (int i = 0; i < size(); i++) {
+            itemStacks.set(i, getStack(i));
         }
+        itemStack.set(DataComponentTypes.CONTAINER, ContainerComponent.fromStacks(itemStacks));
     }
 
-    public boolean shouldDeleteNBT(NbtCompound blockEntityTag) {
-        if (!blockEntityTag.contains("Items"))
-            return blockEntityTag.getKeys().isEmpty();
-        return isEmpty();
-    }
 
     @Override
     public void onClose(PlayerEntity playerEntity_1) {
@@ -62,6 +44,5 @@ public class ItemStackInventory extends SimpleInventory {
             playerEntity_1.giveItemStack(new ItemStack(itemStack.getItem(), count - 1));
         }
         markDirty();
-        // itemStack.removeSubTag(QuickShulkerMod.MOD_ID);
     }
 }

@@ -12,7 +12,6 @@ public class OpenInventoryPacket implements CustomPayload {
     public static final PacketCodec<PacketByteBuf, OpenInventoryPacket> CODEC = PacketCodec.of((value, buf) -> buf.writeInt(0), buf -> new OpenInventoryPacket());
 
     public static final Id<OpenInventoryPacket> ID = CustomPayload.id(QuickShulkerMod.MOD_ID + ":" + "openinv");
-//    public static final Identifier OPEN_INV = new Identifier(QuickShulkerMod.MOD_ID, "openinv");
 
     public static void send(ServerPlayerEntity player) {
         ServerPlayNetworking.send(player, new OpenInventoryPacket());

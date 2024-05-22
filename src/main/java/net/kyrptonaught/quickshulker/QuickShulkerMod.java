@@ -7,6 +7,7 @@ import net.kyrptonaught.kyrptconfig.config.ConfigManager;
 import net.kyrptonaught.quickshulker.api.*;
 import net.kyrptonaught.quickshulker.config.ConfigOptions;
 import net.kyrptonaught.quickshulker.network.OpenShulkerPacket;
+import net.kyrptonaught.quickshulker.network.QuickBundlePacket;
 import net.minecraft.block.CraftingTableBlock;
 import net.minecraft.block.EnderChestBlock;
 import net.minecraft.block.ShulkerBoxBlock;
@@ -29,7 +30,7 @@ public class QuickShulkerMod implements ModInitializer, RegisterQuickShulker {
     public void onInitialize() {
         config.load();
         OpenShulkerPacket.registerReceivePacket();
-//        QuickBundlePacket.registerReceivePacket();
+        QuickBundlePacket.registerReceivePacket();
         UseItemCallback.EVENT.register((player, world, hand) -> {
             ItemStack stack = player.getStackInHand(hand);
             if (!world.isClient) {
