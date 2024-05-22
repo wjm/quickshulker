@@ -8,6 +8,8 @@ import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.collection.DefaultedList;
 
+import java.util.Objects;
+
 
 public class ItemStackInventory extends SimpleInventory {
     protected final ItemStack itemStack;
@@ -21,7 +23,7 @@ public class ItemStackInventory extends SimpleInventory {
 
     public static DefaultedList<ItemStack> getStacks(ItemStack usedStack, int SIZE) {
         DefaultedList<ItemStack> itemStacks = DefaultedList.ofSize(SIZE, ItemStack.EMPTY);
-        usedStack.getComponents().get(DataComponentTypes.CONTAINER).copyTo(itemStacks);
+        Objects.requireNonNull(usedStack.getComponents().get(DataComponentTypes.CONTAINER)).copyTo(itemStacks);
         return itemStacks;
     }
 

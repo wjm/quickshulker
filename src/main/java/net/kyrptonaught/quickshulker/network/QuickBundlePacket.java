@@ -79,8 +79,8 @@ public record QuickBundlePacket(ItemStackWithPos itemStackWithPos) implements Cu
     }
 
     public static class ItemStackWithPos {
-        private ItemStack itemStack;
-        private int slotId;
+        private final ItemStack itemStack;
+        private final int slotId;
 
         public ItemStackWithPos(int slotId, ItemStack itemStack) {
             this.itemStack = itemStack;
