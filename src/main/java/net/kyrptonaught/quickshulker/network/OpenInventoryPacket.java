@@ -1,17 +1,26 @@
 package net.kyrptonaught.quickshulker.network;
 
-import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.kyrptonaught.quickshulker.QuickShulkerMod;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
 
-public class OpenInventoryPacket {
-    public static final Identifier OPEN_INV = new Identifier(QuickShulkerMod.MOD_ID, "openinv");
+public class OpenInventoryPacket implements CustomPayload {
+
+    public static final PacketCodec<PacketByteBuf, OpenInventoryPacket> CODEC = PacketCodec.of((value, buf) -> buf.writeInt(0), buf -> new OpenInventoryPacket());
+
+    public static final Id<OpenInventoryPacket> ID = CustomPayload.id(QuickShulkerMod.MOD_ID + ":" + "openinv");
+//    public static final Identifier OPEN_INV = new Identifier(QuickShulkerMod.MOD_ID, "openinv");
 
     public static void send(ServerPlayerEntity player) {
-        ServerPlayNetworking.send(player, OPEN_INV, new PacketByteBuf(Unpooled.buffer()));
+        ServerPlayNetworking.send(player, new OpenInventoryPacket());
+    }
+
+    @Override
+    public Id<? extends CustomPayload> getId() {
+        return ID;
     }
 
 }

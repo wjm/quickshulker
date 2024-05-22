@@ -1,10 +1,8 @@
 plugins {
-	id 'fabric-loom' version '1.5-SNAPSHOT'
+	id 'fabric-loom' version '1.6-SNAPSHOT'
 	id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -32,13 +30,16 @@ dependencies {
 	//update modmenu when kyrptconfig is pulling old version
 	modImplementation ("com.terraformersmc:modmenu:9.0.0") { exclude group: "net.fabricmc.fabric-api" }
 
-	//shulkerutils
-	modImplementation 'net.kyrptonaught:shulkerutils:1.0.4-1.19'
-	include 'net.kyrptonaught:shulkerutils:1.0.4-1.19'
+//	//shulkerutils
+//	modImplementation 'net.kyrptonaught:shulkerutils:1.0.4-1.19'
+//	include 'net.kyrptonaught:shulkerutils:1.0.4-1.19'
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 17
+	it.options.release = 21
+
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 java {

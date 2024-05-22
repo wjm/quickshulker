@@ -1,29 +1,38 @@
 package net.kyrptonaught.quickshulker.network;
 
-import io.netty.buffer.Unpooled;
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.kyrptonaught.quickshulker.QuickShulkerMod;
 import net.kyrptonaught.quickshulker.api.Util;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.packet.CustomPayload;
 
-public class OpenShulkerPacket {
-    private static final Identifier OPEN_SHULKER_PACKET = new Identifier(QuickShulkerMod.MOD_ID, "open_shulker_packet");
+public record OpenShulkerPacket(int invSlot) implements CustomPayload {
+
+    public static final PacketCodec<PacketByteBuf, OpenShulkerPacket> CODEC = PacketCodec.of((value, buf) -> buf.writeInt(value.invSlot), buf -> new OpenShulkerPacket(buf.readInt()));
+
+    public static final Id<OpenShulkerPacket> ID = CustomPayload.id(QuickShulkerMod.MOD_ID + ":" + "open_shulker_packet");
 
     public static void registerReceivePacket() {
-        ServerPlayNetworking.registerGlobalReceiver(OPEN_SHULKER_PACKET, (server, player, serverPlayNetworkHandler, packetByteBuf, packetSender) -> {
-            int invSlot = packetByteBuf.readInt();
-            server.execute(() -> Util.openItem(player, invSlot));
+        PayloadTypeRegistry.playC2S().register(OpenShulkerPacket.ID, OpenShulkerPacket.CODEC);
+        PayloadTypeRegistry.playS2C().register(OpenShulkerPacket.ID, OpenShulkerPacket.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(OpenShulkerPacket.ID, (payload, context) -> {
+            context.player().server.execute(() -> Util.openItem(context.player(), payload.invSlot));
         });
     }
 
     @Environment(EnvType.CLIENT)
     public static void sendOpenPacket(int invSlot) {
-        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-        buf.writeInt(invSlot);
-        ClientPlayNetworking.send(OPEN_SHULKER_PACKET, new PacketByteBuf(buf));
+        ClientPlayNetworking.send(new OpenShulkerPacket(invSlot));
+    }
+
+    @Override
+    public Id<? extends CustomPayload> getId() {
+        return ID;
     }
 }

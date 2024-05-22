@@ -6,6 +6,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.kyrptonaught.kyrptconfig.keybinding.CustomKeyBinding;
 import net.kyrptonaught.kyrptconfig.keybinding.DisplayOnlyKeyBind;
@@ -32,10 +33,12 @@ public class QuickShulkerModClient implements ClientModInitializer {
                 }
             }
         });
-        ClientPlayNetworking.registerGlobalReceiver(OpenInventoryPacket.OPEN_INV, (client, handler, packet, sender) -> {
-            client.execute(() -> {
-                client.setScreen(new InventoryScreen(client.player));
-            });
+
+        PayloadTypeRegistry.playS2C().register(OpenInventoryPacket.ID, OpenInventoryPacket.CODEC);
+        ClientPlayNetworking.registerGlobalReceiver(OpenInventoryPacket.ID, (payload, context) -> {
+            context.client().setScreen(
+                    new InventoryScreen(context.player())
+            );
         });
         FabricLoader.getInstance().getEntrypoints(QuickShulkerMod.MOD_ID + "_client", RegisterQuickShulkerClient.class).forEach(RegisterQuickShulkerClient::registerClient);
 

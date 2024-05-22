@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "quickshulker",
-  "version": "1.4.1-1.20.4",
+  "version": "1.4.1-1.20.6",
   "name": "Quick Shulker",
   "description": "Quickly open Shulker boxes and more",
   "authors": [
@@ -18,6 +18,10 @@
     {
       "config": "net.kyrptonaught.quickshulker.json",
       "environment": "*"
+    },
+    {
+      "config": "net.kyrptonaught.shulkerutils.mixins.json",
+      "environment": "client"
     }
   ],
   "entrypoints": {
@@ -37,7 +41,7 @@
   "depends": {
     "fabricloader": ">=0.12.5",
     "fabric": "*",
-    "java": ">=17"
+    "java": ">=21"
   },
   "accessWidener": "quickshulker.accesswidener"
 }
