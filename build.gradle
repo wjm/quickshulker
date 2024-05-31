@@ -14,6 +14,7 @@ loom {
 }
 
 repositories {
+	mavenLocal()
 	maven { url 'https://maven.fabricmc.net' }
 	maven { url 'https://maven.kyrptonaught.dev' }
 	maven { url "https://maven.terraformersmc.com/releases" }
@@ -25,10 +26,10 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	modImplementation include("net.kyrptonaught:kyrptconfig:1.5.8-1.20.4") { exclude group: "net.fabricmc.fabric-api" }
+	modImplementation include("net.kyrptonaught:kyrptconfig:1.6.0-1.20.6") { exclude group: "net.fabricmc.fabric-api" }
 
 	//update modmenu when kyrptconfig is pulling old version
-	modImplementation ("com.terraformersmc:modmenu:9.0.0") { exclude group: "net.fabricmc.fabric-api" }
+	modImplementation("com.terraformersmc:modmenu:10.0.0-beta.1") { exclude group: "net.fabricmc.fabric-api" }
 
 //	//shulkerutils
 //	modImplementation 'net.kyrptonaught:shulkerutils:1.0.4-1.19'
