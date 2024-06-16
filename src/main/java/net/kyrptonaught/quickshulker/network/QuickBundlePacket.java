@@ -18,12 +18,13 @@ import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.slot.Slot;
+import net.minecraft.util.Identifier;
 
 import java.util.List;
 
 public record QuickBundlePacket(ItemStackWithPos itemStackWithPos) implements CustomPayload {
 
-    public static final Id<QuickBundlePacket> ID = CustomPayload.id(QuickShulkerMod.MOD_ID + ":" + "quick_bundle_packet");
+    public static final Id<QuickBundlePacket> ID = new Id<>(Identifier.of(QuickShulkerMod.MOD_ID, "quick_bundle_packet"));
     public static final PacketCodec<RegistryByteBuf, QuickBundlePacket> CODEC = new PacketCodec<>() {
         private static final PacketCodec<RegistryByteBuf, RegistryEntry<Item>> ITEM_PACKET_CODEC = PacketCodecs.registryEntry(RegistryKeys.ITEM);
 
@@ -91,7 +92,7 @@ public record QuickBundlePacket(ItemStackWithPos itemStackWithPos) implements Cu
 
     public record BundleIntoHeld(List<ItemStack> stackList) implements CustomPayload {
 
-        public static final Id<BundleIntoHeld> ID = CustomPayload.id(QuickShulkerMod.MOD_ID + ":" + "quick_bundleheld_packet");
+        public static final Id<BundleIntoHeld> ID = new Id<>(Identifier.of(QuickShulkerMod.MOD_ID, "quick_bundleheld_packet"));
 
         public static final PacketCodec<RegistryByteBuf, BundleIntoHeld> CODEC = PacketCodec.tuple(ItemStack.LIST_PACKET_CODEC, BundleIntoHeld::stackList, BundleIntoHeld::new);
 
@@ -117,7 +118,7 @@ public record QuickBundlePacket(ItemStackWithPos itemStackWithPos) implements Cu
     }
 
     public record UnBundlePacket(ItemStackWithPos itemStackWithPos) implements CustomPayload {
-        public static final Id<UnBundlePacket> ID = CustomPayload.id(QuickShulkerMod.MOD_ID + ":" + "quick_unbundle_packet");
+        public static final Id<UnBundlePacket> ID = new Id<>(Identifier.of(QuickShulkerMod.MOD_ID, "quick_unbundle_packet"));
         public static final PacketCodec<RegistryByteBuf, UnBundlePacket> CODEC = new PacketCodec<>() {
             private static final PacketCodec<RegistryByteBuf, RegistryEntry<Item>> ITEM_PACKET_CODEC = PacketCodecs.registryEntry(RegistryKeys.ITEM);
 

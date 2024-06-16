@@ -11,19 +11,18 @@ import net.kyrptonaught.quickshulker.api.Util;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.util.Identifier;
 
 public record OpenShulkerPacket(int invSlot) implements CustomPayload {
 
     public static final PacketCodec<PacketByteBuf, OpenShulkerPacket> CODEC = PacketCodec.of((value, buf) -> buf.writeInt(value.invSlot), buf -> new OpenShulkerPacket(buf.readInt()));
 
-    public static final Id<OpenShulkerPacket> ID = CustomPayload.id(QuickShulkerMod.MOD_ID + ":" + "open_shulker_packet");
+    public static final Id<OpenShulkerPacket> ID = new Id<>(Identifier.of(QuickShulkerMod.MOD_ID, "open_shulker_packet"));
 
     public static void registerReceivePacket() {
         PayloadTypeRegistry.playC2S().register(OpenShulkerPacket.ID, OpenShulkerPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(OpenShulkerPacket.ID, OpenShulkerPacket.CODEC);
-        ServerPlayNetworking.registerGlobalReceiver(OpenShulkerPacket.ID, (payload, context) -> {
-            context.player().server.execute(() -> Util.openItem(context.player(), payload.invSlot));
-        });
+        ServerPlayNetworking.registerGlobalReceiver(OpenShulkerPacket.ID, (payload, context) -> context.player().server.execute(() -> Util.openItem(context.player(), payload.invSlot)));
     }
 
     @Environment(EnvType.CLIENT)

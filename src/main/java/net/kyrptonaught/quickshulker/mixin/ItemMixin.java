@@ -37,12 +37,14 @@ public abstract class ItemMixin {
         if (BundleHelper.shouldAttemptBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingPickup)) {//bundle stack into held item
             if (!player.getWorld().isClient) {
                 BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, cir);
+                slot.onTakeItem(player, insertStack);
             } else if (slot.inventory instanceof PlayerInventory && ClientUtil.isCreativeScreen(player)) { //stupid creative menu shiz
                 QuickBundlePacket.BundleIntoHeld.sendPacket(insertStack, hostStack);
                 BundleHelper.bundleItemIntoStack(player, hostStack, insertStack, cir);
                 QuickBundlePacket.sendCreativeSlotUpdate(insertStack, slot);
             }
         } else if (BundleHelper.shouldAttemptUnBundle(player, clickType, hostStack, insertStack, QuickShulkerMod.getConfig().supportsBundlingExtract)) {//unbundle held stack into slot
+            if (!slot.canInsert(ItemStack.EMPTY)) return;
             if (!player.getWorld().isClient) {
                 BundleHelper.unbundleStackIntoSlot(player, hostStack, slot, cir);
             } else if (slot.inventory instanceof PlayerInventory && ClientUtil.isCreativeScreen(player)) { //stupid creative menu shiz
@@ -50,5 +52,6 @@ public abstract class ItemMixin {
                 BundleHelper.unbundleStackIntoSlot(player, hostStack, slot, cir);
             }
         }
+        player.currentScreenHandler.onContentChanged(slot.inventory);
     }
 }
