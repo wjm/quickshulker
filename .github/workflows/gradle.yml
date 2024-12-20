@@ -40,7 +40,7 @@ jobs:
       uses: actions/upload-artifact@v4.5.0
       with:
         # Artifact name
-        name: "*.jar"
+        name: build-artifacts
         # A file, directory or wildcard pattern that describes what to upload
         path: "./build/libs/"
         # The desired behavior if no files are found using the provided path.
